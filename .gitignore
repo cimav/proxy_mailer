@@ -1,0 +1,56 @@
+# See https://help.github.com/articles/ignoring-files for more about ignoring files.
+
+/credentials/
+
+# --- Bundler ---
+/.bundle
+
+# --- Log and temp files ---
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+
+# --- DB ---
+/db/*.sqlite3
+/db/*.sqlite3-journal
+
+# --- Storage ---
+/storage/*
+!/storage/.keep
+/public/system
+/public/uploads
+
+# --- Node ---
+/node_modules
+/yarn-error.log
+
+# --- Secrets and credentials ---
+/config/master.key
+/config/credentials/*.json
+
+# --- Dotenv ---
+.env
+.env.*
+
+# --- Ruby and Rails ---
+.byebug_history
+
+# --- RubyMine / JetBrains IDE ---
+.idea/
+/*.iml
+/.ruby-version
+/.ruby-gemset
+
+# --- macOS ---
+.DS_Store
+
+# --- System temp files ---
+*.swp
+*~
