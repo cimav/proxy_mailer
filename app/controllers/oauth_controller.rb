@@ -5,7 +5,8 @@ class OauthController < ApplicationController
   require 'json'
   require 'fileutils'
 
-  REDIRECT_URI = 'http://localhost:3000/auth/google_oauth2/callback'
+  REDIRECT_URI = Rails.env.production? ? 'http://xoauth.cimav.edu.mx/auth/google_oauth2/callback' : 'http://localhost:3000/auth/google_oauth2/callback'
+
   GOOGLE_SCOPE = [
     'https://mail.google.com/',
     'https://www.googleapis.com/auth/userinfo.email'
