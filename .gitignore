@@ -4,6 +4,8 @@
 
 /.run-production.sh
 
+/.sample_email.txt
+
 # --- Bundler ---
 /.bundle
 

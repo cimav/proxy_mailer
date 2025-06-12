@@ -14,7 +14,7 @@ class OauthController < ApplicationController
     'openid'                                         # Recomendado adicional
   ].join(' ')
 
-  def initiate
+  def create
     client = Signet::OAuth2::Client.new(
       client_id: ENV['GOOGLE_CLIENT_ID'],
       client_secret: ENV['GOOGLE_CLIENT_SECRET'],
@@ -25,7 +25,28 @@ class OauthController < ApplicationController
       prompt: 'consent' # 👈 Forzar que lo pida aunque ya se haya dado antes
     )
 
-    render json: { url: client.authorization_uri.to_s }
+    render json: {
+      message: "URL para autentificar credenciales.",
+      url: client.authorization_uri.to_s
+    }
+
+  end
+
+  def revoke
+    refresh_token = params[:refresh_token]
+
+    unless refresh_token.present?
+      return render json: { error: 'Falta el refresh_token' }, status: :bad_request
+    end
+
+    uri = URI.parse('https://oauth2.googleapis.com/revoke')
+    response = Net::HTTP.post_form(uri, { token: refresh_token })
+
+    if response.code == '200'
+      render json: { status: 'ok', message: 'Token revocado correctamente' }
+    else
+      render json: { status: 'error', message: "Error revocando: #{response.body}" }, status: :unprocessable_entity
+    end
   end
 
   def callback

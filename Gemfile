@@ -46,9 +46,8 @@ group :development do
 end
 
 #gem 'mail'
-gem 'signet'
-gem 'gmail_xoauth'
-
+#gem 'signet'
+#gem 'gmail_xoauth'
 
 gem 'google-api-client', '~> 0.53'
 gem 'mimemagic'
