@@ -14,7 +14,17 @@ module ProxyMailer
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w(assets tasks))
+    #config.autoload_lib(ignore: %w(assets tasks))
+
+    # O configura específicamente la protección CSRF
+    config.action_controller.default_protect_from_forgery = true
+
+
+    config.api_only = true
+
+    #config.middleware.use ActionDispatch::Cookies
+    #config.middleware.use ActionDispatch::Session::CookieStore
+    #config.middleware.use ActionDispatch::Flash
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -27,19 +37,18 @@ module ProxyMailer
     # Only loads a smaller set of middleware suitable for API only apps.
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
-    config.api_only = true
 
     config.action_mailer.raise_delivery_errors = true
     config.action_mailer.delivery_method = :smtp
-    config.action_mailer.smtp_settings = {
-      address:              "smtp.gmail.com",
-      port:                 587,
-      domain:               "gmail.com",
-      authentication:       :xoauth2,
-      enable_starttls_auto: true,
-      user_name:            nil, # se setea dinámicamente
-      password:             nil  # se setea dinámicamente
-    }
+    #config.action_mailer.smtp_settings = {
+    #  address:              "smtp.gmail.com",
+    #  port:                 587,
+    #  domain:               "gmail.com",
+    #  authentication:       :xoauth2,
+    #  enable_starttls_auto: true,
+    #  user_name:            nil, # se setea dinámicamente
+    #  password:             nil  # se setea dinámicamente
+    #}
 
   end
 end

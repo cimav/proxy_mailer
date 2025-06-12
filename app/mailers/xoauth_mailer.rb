@@ -4,7 +4,7 @@ require 'base64'
 
 class XoauthMailer < ActionMailer::Base
 
-  def dynamic_email(email_data)
+  def old_dynamic_email(email_data)
     from_email = email_data[:from]
     ActionMailer::Base.smtp_settings[:user_name] = from_email
     ActionMailer::Base.smtp_settings[:password]  = get_access_token_for(from_email)
@@ -34,4 +34,40 @@ class XoauthMailer < ActionMailer::Base
       end
     end
   end
+
+  def dynamic_email(email_data)
+    from_email = email_data[:from]
+  
+    # Configuración específica para XOAUTH2
+    ActionMailer::Base.smtp_settings.merge!(
+      user_name: from_email,
+      password: get_access_token_for(from_email),
+      authentication: :xoauth2,
+      enable_starttls_auto: true
+    )
+
+    # Forzar reconfiguración del cliente SMTP
+    ActionMailer::Base.deliveries.clear
+    Mail.defaults { delivery_method :smtp, ActionMailer::Base.smtp_settings }
+
+    mail(
+      to: email_data[:to],
+      from: from_email,
+      subject: email_data[:subject],
+      delivery_method_options: {
+        version: '1.0',
+        auth: :xoauth2,
+        user_name: from_email,
+        password: get_access_token_for(from_email)
+      }
+    ) do |format|
+      format.html { render html: email_data[:body].html_safe }
+      format.text { render plain: ActionView::Base.full_sanitizer.sanitize(email_data[:body]) }
+
+      # Manejo de adjuntos...
+    end
+
+  end
+
+
 end

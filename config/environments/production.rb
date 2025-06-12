@@ -87,4 +87,27 @@ Rails.application.configure do
   # ]
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  #
+  
+  config.hosts << "xoauth.cimav.edu.mx"
+
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+  #config.action_mailer.smtp_settings = {
+  #  address: 'smtp.gmail.com',
+  #  port: 587,
+  #  domain: 'cimav.edu.mx',
+  #  authentication: :xoauth2,
+  #  enable_starttls_auto: true,
+  #  user_name: 'no-reply@cimav.edu.mx', # Valor dummy, se sobrescribe
+  #  password: 'dummy_password', # Valor dummy, se sobrescribe
+  #  xoauth2_request: lambda { |user, token|
+  #    # Construye el comando XOAUTH2 correctamente formateado
+  #    "user=#{user}\x01auth=Bearer #{token}\x01\x01"
+  #  }
+  #}
+
+
 end

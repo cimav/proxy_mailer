@@ -5,11 +5,13 @@ class OauthController < ApplicationController
   require 'json'
   require 'fileutils'
 
-  REDIRECT_URI = Rails.env.production? ? 'http://xoauth.cimav.edu.mx/auth/google_oauth2/callback' : 'http://localhost:3000/auth/google_oauth2/callback'
+  REDIRECT_URI = Rails.env.production? ? 'https://xoauth.cimav.edu.mx/auth/google_oauth2/callback' : 'http://localhost:3000/auth/google_oauth2/callback'
 
   GOOGLE_SCOPE = [
     'https://mail.google.com/',
-    'https://www.googleapis.com/auth/userinfo.email'
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/userinfo.email',  # Este scope es esencial
+    'openid'                                         # Recomendado adicional
   ].join(' ')
 
   def initiate
@@ -35,10 +37,37 @@ class OauthController < ApplicationController
       code: params[:code]
     )
 
+    Rails.logger.info "Iniciando obtención de token de acceso"
+
     client.fetch_access_token!
 
+    Rails.logger.info "Token de acceso obtenido"
+
+    # Verificación adicional del token
+    unless client.access_token
+      raise "No se recibió token de acceso de Google"
+    end
+
+    Rails.logger.debug "Token info: #{client.inspect}"
+
     email = fetch_email(client.access_token)
+    #raise "❌ No se pudo obtener el email del usuario autenticado" if email.nil?
+
+    if email.nil? && client.id_token
+      # Intenta obtener el email del token ID (segunda opción)
+      Rails.logger.info "Intentando obtener email del ID token"
+      payload = JWT.decode(client.id_token, nil, false).first
+      email = payload['email']
+      Rails.logger.info "Email obtenido del ID token: #{email}"
+      #id_token = client.id_token
+      #if id_token
+      #  payload = JWT.decode(id_token, nil, false).first
+      #  email = payload['email']
+      #end
+    end
+
     raise "❌ No se pudo obtener el email del usuario autenticado" if email.nil?
+
 
     # ⚠️ Validar si falta el refresh_token
     if client.refresh_token.nil?
@@ -71,13 +100,26 @@ class OauthController < ApplicationController
   private
 
   def fetch_email(access_token)
-    uri = URI("https://www.googleapis.com/oauth2/v1/userinfo?alt=json")
+
+    # Opción 1: Usando el endpoint más reciente
+    uri = URI('https://openidconnect.googleapis.com/v1/userinfo')
     req = Net::HTTP::Get.new(uri)
     req['Authorization'] = "Bearer #{access_token}"
-    res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+  
+    res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+      http.request(req)
+    end
 
-    return nil unless res.code.to_i == 200
-
-    JSON.parse(res.body)["email"]
+    if res.code.to_i == 200
+      user_info = JSON.parse(res.body)
+      user_info['email'] || user_info['sub'] # Devuelve email o ID único
+    else
+      Rails.logger.error "Error al obtener email: #{res.body}"
+      nil
+    end
+  rescue => e
+    Rails.logger.error "Excepción al obtener email: #{e.message}"
+    nil
   end
+
 end

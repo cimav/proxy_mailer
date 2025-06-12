@@ -4,9 +4,12 @@ require 'uri'
 require 'json'
 require 'base64'
 
+
+begin
+
 # Cargar los archivos
-logo_path   = Rails.root.join('public', 'demo_assets', 'img.png')
-pdf_path    = Rails.root.join('public', 'demo_assets', 'ejemplo.pdf')
+logo_path   = Rails.root.join('public-old', 'demo_assets', 'img.png')
+pdf_path    = Rails.root.join('public-old', 'demo_assets', 'ejemplo.pdf')
 
 # Leer y codificar en base64
 logo_base64 = Base64.strict_encode64(File.read(logo_path))
@@ -22,7 +25,7 @@ HTML
 
 payload = {
   email_data: {
-    from: "juan.calderon@cimav.edu.mx",
+    from: "atencion.posgrado@cimav.edu.mx",
     to: "juan.calderon@gmail.com",
     subject: "Correo de prueba con HTML, imagenes y adjuntos",
     body: html_body,
@@ -34,11 +37,26 @@ payload = {
 }
 
 # Hacer el POST
-uri = URI("http://localhost:3000/send")
+uri = URI("https://xoauth.cimav.edu.mx/send")
 http = Net::HTTP.new(uri.host, uri.port)
+
+
+# Configuración SSL para producción
+if Rails.env.production?
+  http.use_ssl = true
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+end
+
 req = Net::HTTP::Post.new(uri, { 'Content-Type' => 'application/json' })
 req.body = payload.to_json
 
 res = http.request(req)
 puts "📬 Respuesta del servidor:"
 puts res.body
+
+
+rescue => e
+  puts "❌ Error al enviar el correo: #{e.message}"
+  Rails.logger.error "Error en send_demo_email: #{e.message}\n#{e.backtrace.join("\n")}"
+end
+
