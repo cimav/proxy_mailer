@@ -3,6 +3,7 @@ require 'net/http'
 require 'uri'
 require 'base64'
 require 'open-uri'
+require 'mail'
 
 class EmailSenderService
   def initialize(email_params:, credentials:)
@@ -80,13 +81,18 @@ class EmailSenderService
   end
 
   def build_mime_message
+
     boundary = "BOUNDARY"
     parts = []
+
 
     # Cabecera general del mensaje
     parts << "From: #{@email_params[:from]}"
     parts << "To: #{Array(@email_params[:to]).join(', ')}"
-    parts << "Subject: #{@email_params[:subject]}"
+    parts << "Cc: #{Array(@email_params[:cc]).join(', ')}" if @email_params[:cc].present? && @email_params[:cc].any?
+    parts << "Bcc: #{Array(@email_params[:bcc]).join(', ')}" if @email_params[:bcc].present? && @email_params[:bcc].any?
+    encoded_subject = Mail::Encodings.b_value_encode(@email_params[:subject], 'UTF-8')
+    parts << "Subject: #{encoded_subject}"
     parts << "MIME-Version: 1.0"
     parts << "Content-Type: multipart/mixed; boundary=#{boundary}"
     parts << ""

@@ -38,22 +38,25 @@ def get_access_token_for(email)
 
   begin
     client.refresh!
-    
-    # Actualiza las credenciales
+
+    # Actualiza las credenciales sin necesidad de releer el archivo luego
     new_tokens = {
       access_token: client.access_token,
-      refresh_token: client.refresh_token || tokens["refresh_token"], # Conserva el refresh token original si no viene uno nuevo
+      refresh_token: client.refresh_token || tokens["refresh_token"],
       expires_at: Time.now.to_i + client.expires_in.to_i
     }
-    
+
     File.write(path, JSON.pretty_generate(new_tokens))
-    Rails.logger.info "🔄✅ Token refrescado exitosamente para #{email}"
-    
-    new_tokens["access_token"]
+    Rails.logger.info "🔄✅ Token refrescado exitosamente para #{email}, expira en #{client.expires_in} segundos"
+
+    sleep 1  # <= clave: darle tiempo a Google para aceptar el nuevo token
+
+    # ⚠️ IMPORTANTE: usar directamente el nuevo token en memoria, NO volver a leer el archivo
+    return new_tokens["access_token"]
   rescue Signet::AuthorizationError => e
     Rails.logger.error "❌ Error refrescando token: #{e.class} - #{e.message}"
-    raise "❌Error de autorización con Google: #{e.message}"
+    raise "❌ Error de autorización con Google: #{e.message}"
   end
-
 end
+
 

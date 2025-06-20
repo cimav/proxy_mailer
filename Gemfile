@@ -45,7 +45,7 @@ group :development do
   # gem "spring"
 end
 
-#gem 'mail'
+gem 'mail'
 #gem 'signet'
 #gem 'gmail_xoauth'
 
