@@ -49,7 +49,7 @@ def get_access_token_for(email)
     File.write(path, JSON.pretty_generate(new_tokens))
     Rails.logger.info "🔄✅ Token refrescado exitosamente para #{email}, expira en #{client.expires_in} segundos"
 
-    sleep 5  # <= clave: darle tiempo a Google para aceptar el nuevo token
+    sleep 25  # <= clave: darle tiempo a Google para aceptar el nuevo token. 25 seg.
 
     # ⚠️ IMPORTANTE: usar directamente el nuevo token en memoria, NO volver a leer el archivo
     return new_tokens["access_token"]
