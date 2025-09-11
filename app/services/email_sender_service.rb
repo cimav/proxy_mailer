@@ -19,27 +19,11 @@ class EmailSenderService
     validate_sender!
     #validate_token!
 
+    # Obtener el token aquí mismo (arregla el problema de nil)
     @credentials['access_token'] ||= get_access_token_for(@email_params[:from])
 
     # Intentar enviar (con reintento automático si falla por token)
     send_email_with_retry
-
-=begin
-    # Verificar token primero
-    if @credentials['access_token'].nil? # || @credentials['expires_at'].to_i <= Time.now.to_i
-      raise "Token inválido o expirado para #{@email_params[:from]}"
-    end
-
-    mime_message = build_mime_message
-    encoded_message = Base64.urlsafe_encode64(mime_message)
-    response = send_to_gmail_api(encoded_message)
-
-    if response['id']
-      { success: true, message_id: response['id'] }
-    else
-      { success: false, error_code: 'EMAIL_004', message: response['error'] || 'Failed to send email' }
-    end
-=end
 
   rescue => e
     { success: false, error_code: 'EMAIL_004', message: e.message }
@@ -47,6 +31,7 @@ class EmailSenderService
 
   private
 
+  # Asegurarse de tener acceso a get_access_token_for
   def get_access_token_for(email)
     Object.send(:get_access_token_for, email)
   end  
