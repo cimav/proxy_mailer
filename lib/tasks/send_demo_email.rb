@@ -4,6 +4,8 @@ require 'uri'
 require 'json'
 require 'base64'
 
+# Desde el directorio raíz de tu aplicación Rails
+# rails runner lib/tasks/send_demo_email.rb
 
 begin
 
