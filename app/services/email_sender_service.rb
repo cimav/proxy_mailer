@@ -45,6 +45,19 @@ class EmailSenderService
 
   private
 
+  def authentication_error?(response)
+    return false unless response['error']
+
+    error_msg = response['error'].to_s.downcase
+    error_msg.include?('auth') ||
+      error_msg.include?('token') ||
+      error_msg.include?('401') ||
+      error_msg.include?('403') ||
+      error_msg.include?('credential') ||
+      error_msg.include?('unauthorized')
+  end
+
+
   def send_email_with_retry
     # Verificar token primero
     if @credentials['access_token'].nil?
