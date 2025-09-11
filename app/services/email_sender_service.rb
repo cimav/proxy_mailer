@@ -1,3 +1,5 @@
+require_relative '../../config/initializers/oauth2_mailer'
+
 # app/services/email_sender_service.rb
 require 'net/http'
 require 'uri'
@@ -9,13 +11,18 @@ class EmailSenderService
   def initialize(email_params:, credentials:)
     @email_params = email_params
     @credentials = credentials
+    @retry_count = 0
   end
 
   def call
-
     validate_recipients!
     validate_sender!
     #validate_token!
+
+    # Intentar enviar (con reintento automático si falla por token)
+    send_email_with_retry
+
+=begin
     # Verificar token primero
     if @credentials['access_token'].nil? # || @credentials['expires_at'].to_i <= Time.now.to_i
       raise "Token inválido o expirado para #{@email_params[:from]}"
@@ -30,11 +37,41 @@ class EmailSenderService
     else
       { success: false, error_code: 'EMAIL_004', message: response['error'] || 'Failed to send email' }
     end
+=end
+
   rescue => e
     { success: false, error_code: 'EMAIL_004', message: e.message }
   end
 
   private
+
+  def send_email_with_retry
+    # Verificar token primero
+    if @credentials['access_token'].nil?
+      raise "Token inválido para #{@email_params[:from]}"
+    end
+
+    mime_message = build_mime_message
+    encoded_message = Base64.urlsafe_encode64(mime_message)
+    response = send_to_gmail_api(encoded_message)
+
+    if response['id']
+      { success: true, message_id: response['id'] }
+    elsif authentication_error?(response) && @retry_count == 0
+      # 🔁 PRIMER INTENTO: Error de autenticación, refrescar token y reintentar
+      @retry_count += 1
+      Rails.logger.info "🔄 Token expirado, refrescando y reintentando..."
+
+      # Refrescar el token llamando a la función existente
+      @credentials['access_token'] = get_access_token_for(@email_params[:from])
+
+      # Reintentar exactamente el mismo envío
+      send_email_with_retry
+    else
+      { success: false, error_code: 'EMAIL_004', message: response['error'] || 'Failed to send email' }
+    end
+  end
+
 
   def validate_recipients!
     %i[to cc bcc].each do |field|
