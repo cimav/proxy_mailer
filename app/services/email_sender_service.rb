@@ -19,6 +19,8 @@ class EmailSenderService
     validate_sender!
     #validate_token!
 
+    @credentials['access_token'] ||= get_access_token_for(@email_params[:from])
+
     # Intentar enviar (con reintento automático si falla por token)
     send_email_with_retry
 
@@ -45,6 +47,10 @@ class EmailSenderService
 
   private
 
+  def get_access_token_for(email)
+    Object.send(:get_access_token_for, email)
+  end  
+
   def authentication_error?(response)
     return false unless response['error']
 
@@ -59,6 +65,7 @@ class EmailSenderService
 
 
   def send_email_with_retry
+
     # Verificar token primero
     if @credentials['access_token'].nil?
       raise "Token inválido para #{@email_params[:from]}"
@@ -73,7 +80,7 @@ class EmailSenderService
     elsif authentication_error?(response) && @retry_count == 0
       # 🔁 PRIMER INTENTO: Error de autenticación, refrescar token y reintentar
       @retry_count += 1
-      Rails.logger.info "🔄 Token expirado, refrescando y reintentando..."
+      Rails.logger.info "🔄 Token expirado, refrescando y reintentando #{@retry_count}..."
 
       # Refrescar el token llamando a la función existente
       @credentials['access_token'] = get_access_token_for(@email_params[:from])
