@@ -77,8 +77,9 @@ class TokenManagementController < ActionController::API
 
     begin
       # Usar el servicio existente que maneja el refresh
-      access_token = GoogleOauthService.get_access_token_for(email)
-      
+      # access_token = GoogleOauthService.get_access_token_for(email)
+      access_token = get_access_token_for(email)
+
       # Leer tokens actualizados
       path = Rails.root.join('credentials', "#{email}.json")
       tokens = JSON.parse(File.read(path))
